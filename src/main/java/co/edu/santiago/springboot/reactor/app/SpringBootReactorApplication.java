@@ -19,14 +19,16 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		// We declare our User flux.
-		// When a String arrives (in the form of name surname), we split the name of the surname.
+		// We declare a String flux.
+		Flux<String> names = Flux.just("Jhon Doe", "Diana Hang", "Kate O'Brian", "Mark Roberts", "Bruce Lee", "Bob Marley", "Dave Casper");
+
+		// When a String arrives from the String flux (in the form of name surname), we split the name of the surname.
 		// Then maps the name and surname to the User entity.
 		// Then selects all the users with a name beginning with B
 		// Check if the user was created. Throws an error if not.
 		// Transform each user name to uppercase form
-		Flux<User> names = Flux.just("Jhon Doe", "Diana Hang", "Kate O'Brian", "Mark Roberts", "Bruce Lee", "Bob Marley", "Dave Casper")
-				.map(fullName -> fullName.split(" "))
+		// So, the result of those operators we have a new Flux of type User! Fluxes are immutables.
+		Flux<User> users = names.map(fullName -> fullName.split(" "))
 				.map(nameArray -> new User(nameArray[0].toUpperCase(), nameArray[1].toUpperCase()))
 				.filter(user -> user.getName().startsWith("B"))
 				.doOnNext(user -> {
@@ -42,11 +44,9 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 					return user;
 				});
 
-		// We got subscribed to our flux.
-		// Each user is printed out as string
-		// If an error occurs in the producer side, prints out the message of the error.
-		// When the producer completes the transmission, prints out a success message.
-		names.subscribe(user -> log.info("Consuming user {}", user.toString()), error -> log.error(error.getMessage()), () ->
+		// If we subscribe to the Users' flux the output will be related with the operators applied in the Flux<User>
+		// But, if we subscribe to the String's flux the output will be the raw full name, ignoring the fact that we used it to build our users' flux.
+		users.subscribe(user -> log.info("Consuming user {}", user.toString()), error -> log.error(error.getMessage()), () ->
 				log.info("Producer execution had finished successfully!"));
 
 	}
