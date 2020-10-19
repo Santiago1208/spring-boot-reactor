@@ -20,11 +20,15 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		// We declare our User flux.
-		// When a String arrives, map that string to a user name.
+		// When a String arrives (in the form of name surname), we split the name of the surname.
+		// Then maps the name and surname to the User entity.
+		// Then selects all the users with a name beginning with B
 		// Check if the user was created. Throws an error if not.
 		// Transform each user name to uppercase form
-		Flux<User> names = Flux.just("Jhon", "Diana", "Kate", "Mark")
-				.map(name -> new User(name.toUpperCase(), null))
+		Flux<User> names = Flux.just("Jhon Doe", "Diana Hang", "Kate O'Brian", "Mark Roberts", "Bruce Lee", "Bob Marley", "Dave Casper")
+				.map(fullName -> fullName.split(" "))
+				.map(nameArray -> new User(nameArray[0].toUpperCase(), nameArray[1].toUpperCase()))
+				.filter(user -> user.getName().startsWith("B"))
 				.doOnNext(user -> {
 					if (user == null) {
 						throw new RuntimeException("Error: Empty user was found");
@@ -34,6 +38,7 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 				})
 				.map(user -> {
 					user.setName(user.getName().toLowerCase());
+					user.setSurname(user.getSurname().toLowerCase());
 					return user;
 				});
 
