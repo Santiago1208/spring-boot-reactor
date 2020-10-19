@@ -19,16 +19,23 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		// We declare our String flux.
-		// When a String arrives, then print out the name.
-		Flux<String> names = Flux.just("Jhon", "", "Diana", "Kate", "Mark", "")
+		// When a String arrives, check if it is empty. If so, throws an error.
+		Flux<String> names = Flux.just("Jhon", "Diana", "Kate", "Mark")
 				.doOnNext(name -> {
 					if (name.isEmpty()) {
 						throw new RuntimeException("Error: Empty name was found");
 					}
 				});
 
-		// We got subscribed to our flux. Without subscribers, the onNextMethod won't work.
-		names.subscribe(log::info, error -> log.error(error.getMessage()));
+		// We got subscribed to our flux. For each element arrived print out that element.
+		// If an error occurs in the producer side, prints out the message of the error.
+		// When the producer completes the transmission, prints out a sucess message.
+		names.subscribe(log::info, error -> log.error(error.getMessage()), new Runnable() {
+			@Override
+			public void run() {
+				log.info("Producer execution had finished successfully!");
+			}
+		});
 
 	}
 }
