@@ -1,5 +1,6 @@
 package co.edu.santiago.springboot.reactor.app;
 
+import co.edu.santiago.springboot.reactor.app.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -18,24 +19,30 @@ public class SpringBootReactorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		// We declare our String flux.
-		// When a String arrives, check if it is empty. If so, throws an error.
-		Flux<String> names = Flux.just("Jhon", "Diana", "Kate", "Mark")
-				.doOnNext(name -> {
-					if (name.isEmpty()) {
-						throw new RuntimeException("Error: Empty name was found");
+		// We declare our User flux.
+		// When a String arrives, map that string to a user name.
+		// Check if the user was created. Throws an error if not.
+		// Transform each user name to uppercase form
+		Flux<User> names = Flux.just("Jhon", "Diana", "Kate", "Mark")
+				.map(name -> new User(name.toUpperCase(), null))
+				.doOnNext(user -> {
+					if (user == null) {
+						throw new RuntimeException("Error: Empty user was found");
+					} else {
+						log.info("Checking user {}", user.toString());
 					}
+				})
+				.map(user -> {
+					user.setName(user.getName().toLowerCase());
+					return user;
 				});
 
-		// We got subscribed to our flux. For each element arrived print out that element.
+		// We got subscribed to our flux.
+		// Each user is printed out as string
 		// If an error occurs in the producer side, prints out the message of the error.
-		// When the producer completes the transmission, prints out a sucess message.
-		names.subscribe(log::info, error -> log.error(error.getMessage()), new Runnable() {
-			@Override
-			public void run() {
-				log.info("Producer execution had finished successfully!");
-			}
-		});
+		// When the producer completes the transmission, prints out a success message.
+		names.subscribe(user -> log.info("Consuming user {}", user.toString()), error -> log.error(error.getMessage()), () ->
+				log.info("Producer execution had finished successfully!"));
 
 	}
 }
